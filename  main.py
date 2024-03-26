@@ -2,8 +2,11 @@ import random
 import matplotlib.pyplot as plt
 import inspect
 import sys
-from strategies_five import *
+from strategies import *
 from players import *
+from collections import Counter
+
+ROUNDS=10
 
 # Получаем все классы из модуля
 all_classes = inspect.getmembers(sys.modules[__name__], inspect.isclass)
@@ -41,83 +44,6 @@ game_results ={}
 
 
 
-def select_vs_select(player1, player2):
-    for item in strategy_instances:
-        if item.name == player1:
-            strategy_chosen_1=item
-    for item in strategy_instances:
-        if item.name == player2:
-            strategy_chosen_2=item
-    # print('================================= играет ', strategy.name)
-    result_score_1=0
-    result_score_2=0
-    for _ in range(1):
-
-        
-        player1 = Player("Игрок 1", strategy_chosen_1)
-        player2 = Player("Игрок 2", strategy_chosen_2)
-        game = Game(player1, player2)
-        strategy_to_save=player1.strategy.name
-
-        for _ in range(100):
-            game.play_round()
-            # print("**** очки за баттл: "  + str(player1.score_sum) + " vs " +  str(player2.score_sum)+ " *******************************************")
-            # print(player1.round_scores)
-
-        result_score_1+=player1.score_sum
-        result_score_2+=player2.score_sum
-        # print(result_score_1)
-
-        #сохраняем итоговые суммы за раунд в общие суммы
-        if player1.strategy.name in game_results:
-            game_results[player1.strategy.name].extend(player1.round_scores)
-        else:
-            game_results[player1.strategy.name] =player1.round_scores
-        if player2.strategy.name in game_results:
-            game_results[player2.strategy.name].extend(player2.round_scores)
-        else:
-            game_results[player2.strategy.name] = player2.round_scores
-
-                
-        # print("^^^^^^^^^ resu1lt scores are: " + str(result_score_1)+" ^^^^^^^^^^^^^^^^^^^^^^^")
-
-# select_vs_select()
-
-def random_vs_random():
-    for strategy in strategy_instances:
-        # print('================================= играет ', strategy.name)
-        result_score_1=0
-        result_score_2=0
-        for _ in range(10000):
-            strategy_to_save=strategy.name
-            
-            player1 = Player("Игрок 1", strategy)
-            player2 = Player("Игрок 2", random.choice(strategy_instances))
-            game = Game(player1, player2)
-
-            for _ in range(100):
-                game.play_round()
-                # print("**** очки за баттл: "  + str(player1.score_sum) + " vs " +  str(player2.score_sum)+ " *******************************************")
-                # print(player1.round_scores)
-
-            result_score_1+=player1.score_sum
-            result_score_2+=player2.score_sum
-            # print(result_score_1)
-
-            #сохраняем итоговые суммы за раунд в общие суммы
-            if player1.strategy.name in game_results:
-                game_results[player1.strategy.name].extend(player1.round_scores)
-            else:
-                game_results[player1.strategy.name] =player1.round_scores
-            if player2.strategy.name in game_results:
-                game_results[player2.strategy.name].extend(player2.round_scores)
-            else:
-                game_results[player2.strategy.name] = player2.round_scores
-
-                
-        # print("^^^^^^^^^ resu1lt scores are: " + str(result_score_1)+" ^^^^^^^^^^^^^^^^^^^^^^^")
-
-# random_vs_random()
 
 def all_versus_all()-> None:
     """
@@ -167,58 +93,93 @@ def all_versus_all()-> None:
 # all_versus_all()
         
 
-def all_versus_all_mod()-> None:
+def all_versus_all_mod(players)-> None:
     """
     один игрок играет с другим только один раз
 
     """
+    if len(players) <2:
+        print("Not enough players")
+        exit()
 
-    # strategy_to_save=strategy_instances[i].name
-    #создаем персонажа с каждой стратегией и создаем игру с ними
-    players=[]
-    player1 = Player("Игрок 1", TitForTat())
-    player2 = Player("Игрок 2", Negative())
-    player3 = Player("Игрок 3", Positive())
-    player4 = Player("Игрок 4", Friedman())
-    player5 = Player("Игрок 5", Detective())
-    players.append(player1)
-    players.append(player2)
-    players.append(player3)
-    players.append(player4)
-    players.append(player5)
-    game = Game(player1, player2)
-
-    # print("match: " + strategy_instances[i].name + " vs " + strategy_instances[j].name)
-    #играем раунды 2 игроков
-    for _ in range(10):
-        game.play_round()
-
-    #Выводим в консоль результаты
-    print("**** очки за баттл: "  + str(player1.score_sum) + " vs " +  str(player2.score_sum)+ " *******************************************")
-    print(player1.round_scores)
-    #сохраняем итоговые суммы за раунд в общие суммы
-    # if strategy_instances[i].name in game_results:
-    #     game_results[strategy_instances[i].name].extend(player1.round_scores)
-    # else:
-    #     game_results[strategy_instances[i].name] =player1.round_scores
-    # if strategy_instances[j].name in game_results:
-    #     game_results[strategy_instances[j].name].extend(player2.round_scores)
-    # else:
-    #     game_results[strategy_instances[j].name] = player2.round_scores
+    players_copy=[]
+    for player in players:
+        players_copy.append(Player("Игрок", player.strategy))
+    players=players_copy
 
 
-    # result_score_1+=player1.score_sum
-    # result_score_2+=player2.score_sum
+    match = Game(*players)
+    match.play_tournament(ROUNDS)
 
-    # if strategy_to_save not in result_dict2:
-    #     result_dict2[strategy_to_save] = []
-    # result_dict2[strategy_to_save].extend(player1.round_scores)
+    
+    #создадим словарь для игрока и его счета
+    players_dict=[]
+    for player in players:
+        # print(player)
+        players_dict.append((player.strategy.name, player.scores[-1]))
+    #сортировка по суммам
+    players_dict.sort(key=lambda x: x[1], reverse=True)
 
-all_versus_all_mod()
-# print(filter(lambda obj: obj.name == 'TitForTatStrategy', strategy_instances))
-print(Positive())
-# print(strategy_instances[1].name)
-# print(game_results)
+# Подсчет количества каждого элемента
+    element_count = Counter(players_dict)
+    for key, value in dict(element_count).items():
+        print("{}x {} : {}".format(value, key[0], key[1] ))
+    return players
+
+
+def Culture(players):
+
+    random.shuffle(players)
+    players.sort(key=lambda x: x.scores[-1], reverse=True)
+    player_best=players[:5]
+    
+    del players[-5:]
+    players[:0]=players[:5]
+
+
+    return(players)
+
+
+players=[]
+# players.append(Player("Игрок 1", TitForTat()))
+# players.append(Player("Игрок 2", Negative()))
+# players.append(Player("Игрок 3", Positive()))
+# players.append(Player("Игрок 4", Friedman()))
+# players.append(Player("Игрок 5", Detective()))
+
+# for _ in range(15):
+#     players.append(Player("Игрок", Positive()))
+# for _ in range(5):
+#     players.append(Player("Игрок", Negative()))
+# for _ in range(5):
+#     players.append(Player("Игрок", TitForTat()))
+
+for _ in range(3):
+    players.append(Player("Игрок", Sample()))
+for _ in range(3):
+    players.append(Player("Игрок", Simpleton()))
+for _ in range(3):
+    players.append(Player("Игрок", Random()))
+for _ in range(3):
+    players.append(Player("Игрок", TitForTat()))
+for _ in range(13):
+    players.append(Player("Игрок", Negative()))
+
+# for _ in range(25):
+#     players.append(Player("Игрок", Random()))
+
+
+for _ in range(45):
+    endless_game = False
+    players=all_versus_all_mod(players)
+    players = Culture(players)
+    print()
+    #если все одинаковые то остановить игру
+    if not endless_game:
+        if len({player.strategy.name for player in players })==1:
+            players=all_versus_all_mod(players)
+            players = Culture(players)
+            break
 
 
 for key, value in game_results.items():
@@ -233,10 +194,16 @@ for key, value in game_results.items():
 result_dict3 = dict(sorted(result_dict3.items(), key=lambda x: x[1][-1], reverse=True))
 
 
-
+# for player in players:
+#     print(player.all_rounds_scores)
+#     print(player.scores)
 #выводим из словаря список игроков и их результат
 for key, value in result_dict3.items():
     print(key, value[-1])
+
+#заносим все в график
+for player in players:
+    plt.plot(player.scores, label=player.strategy.name)
 
 #заносим все в график
 for key, value in result_dict3.items():

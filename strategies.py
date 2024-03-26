@@ -6,10 +6,19 @@ mistake_ratio=0.05
 class Strategy:
     def __init__(self, name):
         self.name = name
-        self.mistake_ratio= mistake_ratio
+        # self.mistake_ratio= mistake_ratio
 
     def choose_action(self, player_actions, opponent_actions):
         pass
+
+    def proceed(self, action):
+        # global mistake_ratio
+        if random.random() < mistake_ratio:
+            if action == "betray":
+                return "cooperate"
+            else:
+                return "betray"
+        return action
 
 class Positive(Strategy):
     """
@@ -19,7 +28,7 @@ class Positive(Strategy):
     def __init__(self):
         self.name = "Positive"
     def choose_action(self, player_actions, opponent_actions):
-        return "cooperate"
+        return self.proceed("cooperate")
 
 class Negative(Strategy):
     """
@@ -29,7 +38,7 @@ class Negative(Strategy):
     def __init__(self):
         self.name = "Negative"
     def choose_action(self, player_actions, opponent_actions):
-        return "betray"
+        return self.proceed("betray")
 
 class Majority(Strategy):
     """
@@ -42,11 +51,11 @@ class Majority(Strategy):
         cooperate_count = opponent_actions.count("cooperate")
         betray_count = opponent_actions.count("betray")
         if cooperate_count > betray_count:
-            return "cooperate"
+            return self.proceed("cooperate")
         else:
-            return "betray"
+            return self.proceed("betray")
 
-class RandomStrategy(Strategy):
+class Random(Strategy):
     """
     Класс случайных чисел
     не протестирован
@@ -54,9 +63,10 @@ class RandomStrategy(Strategy):
     def __init__(self):
         self.name = "random"
     def choose_action(self, player_actions, opponent_actions):
-        return random.choice(["cooperate", "betray"])
 
-class SampleStrategy(Strategy):
+        return self.proceed(random.choice(["cooperate","betray"]))
+
+class Sample(Strategy):
     """
     Класс Sample, начинает с сотрудничества. Если предают 2 раза предает один раз
     не протестирован
@@ -65,11 +75,11 @@ class SampleStrategy(Strategy):
         self.name = "Sample"
     def choose_action(self, player_actions, opponent_actions):
         if opponent_actions[-2:] == ["betray", "betray"]:
-            return "betray"
+            return self.proceed("betray")
         else:
-            return "cooperate"
+            return self.proceed("cooperate")
 
-class FriedmanStrategy(Strategy):
+class Friedman(Strategy):
     """
     Класс Фридман, начинает с сотрудничества. Если предают 1 раз начинает предавать всегда
     """
@@ -84,9 +94,9 @@ class FriedmanStrategy(Strategy):
 
         if self.betrayed:
 
-            return "betray"
+            return self.proceed("betray")
         else:
-            return "cooperate"
+            return self.proceed("cooperate")
         
 class JossStrategy(Strategy):
     """
@@ -98,9 +108,9 @@ class JossStrategy(Strategy):
         self.name = "Joss"
     def choose_action(self, player_actions, opponent_actions):
         if opponent_actions and (opponent_actions[-1] == "betray" or random.random() < 0.1):
-            return "betray"
+            return self.proceed("betray")
         else:
-            return "cooperate"
+            return self.proceed("cooperate")
 
 class GrassmanStrategy(Strategy):
     """
@@ -111,11 +121,11 @@ class GrassmanStrategy(Strategy):
         self.name = "Grassman"
     def choose_action(self, player_actions, opponent_actions):
         if opponent_actions and (opponent_actions[-1] == "betray" or len(opponent_actions)==50):
-            return "betray"
+            return self.proceed("betray")
         else:
-            return "cooperate"
+            return self.proceed("cooperate")
 
-class TitForTatStrategy(Strategy):
+class TitForTat(Strategy):
     """
     Класс Око за око, начинает с сотрудничества, копирут действие соперника
     """
@@ -123,9 +133,9 @@ class TitForTatStrategy(Strategy):
         self.name = "TitForTat"
     def choose_action(self, player_actions, opponent_actions):
         if opponent_actions and opponent_actions[-1] == "betray":
-            return "betray"
+            return self.proceed("betray")
         else:
-            return "cooperate"
+            return self.proceed("cooperate")
 
 class TitForTatWithForgiveness(Strategy):
     """
@@ -138,11 +148,11 @@ class TitForTatWithForgiveness(Strategy):
 
     def choose_action(self, player_actions, opponent_actions):
         if opponent_actions and random.random() < self.forgiveness_probability:
-            return "cooperate"
+            return self.proceed("cooperate")
         elif opponent_actions:
-            return opponent_actions[-1]
+            return self.proceed(opponent_actions[-1])
         else:
-            return "cooperate"
+            return self.proceed("cooperate")
 
 class TitForTatWithRandom(Strategy):
     """
@@ -155,9 +165,9 @@ class TitForTatWithRandom(Strategy):
 
     def choose_action(self, player_actions, opponent_actions):
         if opponent_actions and opponent_actions[-1] == "betray":
-            return "betray" if random.random() < self.betray_probability else "cooperate"
+            return self.proceed("betray") if random.random() < self.betray_probability else self.proceed("cooperate")
         else:
-            return "cooperate"
+            return self.proceed("cooperate")
 
 class Reversed(Strategy):
     """
@@ -168,11 +178,11 @@ class Reversed(Strategy):
         self.name = "Reversed"
     def choose_action(self, player_actions, opponent_actions):
         if len(opponent_actions) == 0:
-            return "cooperate"
+            return self.proceed("cooperate")
         elif opponent_actions[-1] == "cooperate":
-            return "betray"
+            return self.proceed("betray")
         else:
-            return "cooperate"
+            return self.proceed("cooperate")
         
 class Pessimistic(Strategy):
     """
@@ -184,9 +194,9 @@ class Pessimistic(Strategy):
 #todo почему из всего списка проверка? он не может знать текущее действие
     def choose_action(self, player_actions, opponent_actions):
         if "cooperate" in opponent_actions:
-            return "cooperate"
+            return self.proceed("cooperate")
         else:
-            return "betray"
+            return self.proceed("betray")
 
 class Detective(Strategy):
     """
@@ -201,15 +211,15 @@ class Detective(Strategy):
     def choose_action(self, player_actions, opponent_actions):
         self.copy_opponent = False
         if len(opponent_actions) < len(self.detective_actions):
-            return self.detective_actions[len(opponent_actions)]
+            return self.proceed(self.detective_actions[len(opponent_actions)])
         
         if "betray" in opponent_actions:
             self.copy_opponent = True
 
         if self.copy_opponent:
-            return opponent_actions[-1]
+            return self.proceed(opponent_actions[-1])
         else:
-            return "betray"
+            return self.proceed("betray")
         
 
 class Simpleton(Strategy):
@@ -221,28 +231,8 @@ class Simpleton(Strategy):
 
     def choose_action(self, player_actions, opponent_actions):
         if opponent_actions and opponent_actions[-1] == "betray":
-            return player_actions[-1]
+            return self.proceed(player_actions[-1])
         elif opponent_actions:
-            return "cooperate" if player_actions[-1]=="cooperate" else "betray"
+            return self.proceed("cooperate") if player_actions[-1]=="cooperate" else self.proceed("betray")
         else:
-            # print("error")
-            return "cooperate"
-
-class SimpletonMistake(Strategy):
-    """
-    Класс Simpleton, начинает с сотрудничества. Если оппонент сотрудничает, повторяет свое прошлое действие. Если оппонент предал, повторяет обратное своему прошлому действию.
-    Добавлена 5% вероятность предать просто так.
-    """
-    def __init__(self):
-        self.name = "SimpletonMistake"
-
-    def choose_action(self, player_actions, opponent_actions):
-        if random.random() < 0.05:
-            return "betray"
-        if opponent_actions and opponent_actions[-1] == "betray":
-            return player_actions[-1]
-        elif opponent_actions:
-            return "cooperate" if player_actions[-1]=="cooperate" else "betray"
-        else:
-            # print("error")
-            return "cooperate"
+            return self.proceed("cooperate")
