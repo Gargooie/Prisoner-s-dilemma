@@ -2,14 +2,15 @@
 versatile=[3,5,0,1]
 asian=[2,3,-1,0]
 score_table=asian
+show_round_scores_con=True
 
 class Player:
     def __init__(self, name, strategy):
         self.name = name if name is not None else "Игрок"
-        self.round_score = 0
-        self.round_scores = []
-        self.all_rounds_scores=[]
-        self.score_sum = 0
+        self.round_score = 0            # очков в этом раунде
+        self.round_scores = []          #список очков за раунд
+        self.all_rounds_scores=[]       #список очков за всю игру
+        self.score_sum = 0              #сумма очков
         self.scores = []
         self.strategy = strategy if strategy is not None else self.Titfortat()
         self.actions = []  # Добавляем список действий соперника
@@ -38,13 +39,14 @@ class Player:
 
 class Game:
     def __init__(self, *args):
+        if len(args)<2:
+            raise IndexError("not enough players for players class")
+
         self.players=[]
         for item in args:
             self.players.append(item)
         self.player1 = args[0]
         self.player2 = args[1]
-
-
 
     def play_round(self, player1, player2):
         action1 = player1.choose_action()
@@ -80,11 +82,15 @@ class Game:
         player2.actions.append(action2)
         player2.opponent_actions.append(action1)
 
-        # print(f"{player1.name} ({player1.strategy.name}) выбрал {action1} и получил {player1.round_score} очков.")
-        # print(f"{player2.name} ({player2.strategy.name}) выбрал {action2} и получил {player2.round_score} очков.")
-        # print(f"Очки {player1.name}: {player1.score_sum}, очки {player2.name}: {player2.get_score_sum()}")
-        # print(f"1 игрок очки списком: {player1.round_scores}")
-        # print(f"очки очки сумма: {sum(player1.round_scores)}")
+        def show_round_scores():
+            print(f"{player1.name} ({player1.strategy.name}) выбрал {action1} и получил {player1.round_score} очков.")
+            print(f"{player2.name} ({player2.strategy.name}) выбрал {action2} и получил {player2.round_score} очков.")
+            print(f"Очки {player1.name}: {player1.score_sum}, очки {player2.name}: {player2.get_score_sum()}")
+            print(f"1 игрок очки списком: {player1.round_scores}")
+            print(f"очки очки сумма: {sum(player1.round_scores)}")
+        if show_round_scores_con==True:
+            show_round_scores()
+
         return sum(player1.round_scores), sum(player1.round_scores)
 
 

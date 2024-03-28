@@ -1,24 +1,58 @@
 import random
+# from main import MISTAKES_RATIO
 
-
-mistake_ratio=0.05
+MISTAKES_RATIO= 0.00
 
 class Strategy:
     def __init__(self, name):
         self.name = name
-        # self.mistake_ratio= mistake_ratio
 
     def choose_action(self, player_actions, opponent_actions):
         pass
 
     def proceed(self, action):
-        # global mistake_ratio
-        if random.random() < mistake_ratio:
+        if random.random() < MISTAKES_RATIO:
             if action == "betray":
                 return "cooperate"
             else:
                 return "betray"
         return action
+    
+class User(Strategy):
+    """
+    Класс игрок
+    
+    """
+    def __init__(self):
+        self.name = "User"
+        self.auto=""
+    def choose_action(self, player_actions, opponent_actions):
+        if self.auto=="4":
+            return random.choice(["cooperate", "betray"])
+        elif self.auto=="11":
+            return "cooperate"
+        elif self.auto=="00":
+            return "betray"
+        while True:
+            action= input("Ваш ход, сотрудничать(1) / предать(0). Всегда сотрудничество(11), всегда предать(00). Рандом(4): ")
+            if action not in ["0", "1", "11", "00", "4"]:
+                print("Ошибка ввода.")
+                continue
+            else:
+                break
+        if action == "1":
+            return "cooperate"
+        elif action == "0":
+            return "betray"
+        if action == "11":
+            self.auto="11"
+            return "cooperate"
+        if action == "00":
+            self.auto="00"
+            return "betray"
+        elif action == "4":
+            self.auto="4"
+            return random.choice(["cooperate", "betray"])
 
 class Positive(Strategy):
     """
